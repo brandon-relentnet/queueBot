@@ -84,6 +84,22 @@ def main():
     # We need a console for background threads to log to, even if hidden.
     ensure_console_created()
 
+    # --- Single Instance Check ---
+    # Create a named mutex. If it already exists, another instance is running.
+    mutex_name = "Global\\queueBot_Instance_Mutex"
+    kernel32 = ctypes.WinDLL('kernel32')
+    mutex = kernel32.CreateMutexW(None, False, mutex_name)
+    last_error = kernel32.GetLastError()
+    
+    if last_error == 183:  # ERROR_ALREADY_EXISTS
+        # If the console is visible (e.g. dev mode), print a message. 
+        # Otherwise, just exit silently to avoid popping up a confusing window.
+        if cfg.console:
+            cfg.console.print("[warning]queueBot is already running![/]")
+        else:
+            print("queueBot is already running!")
+        sys.exit(0)
+
     # --- Check if setup is needed ---
     setup_needed = args.update or not os.path.exists(cfg.CONFIG_FILE)
 
