@@ -15,6 +15,7 @@ except ImportError:
 import config as cfg
 from lcu import LCU
 from tray import TrayIcon
+from _version import __version__
 
 def get_console_window():
     """Returns the handle to the console window."""
@@ -75,7 +76,7 @@ def main():
     """
     Main function to handle configuration and launch the tray icon.
     """
-    parser = argparse.ArgumentParser(description="TFT Auto Accept Tool")
+    parser = argparse.ArgumentParser(description=f"queueBot Tool {__version__}")
     parser.add_argument("--update", action="store_true", help="Force update of settings")
     args = parser.parse_args()
 

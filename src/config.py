@@ -69,7 +69,7 @@ def prompt_for_config():
         
     try:
         console.clear()
-        console.print(Panel.fit("[bold white]Auto-Accept Tool Setup[/]", style="magenta"))
+        console.print(Panel.fit("[bold white]queueBot Setup[/]", style="magenta"))
         
         console.print("[info]We need your Discord Webhook URL to send notifications.[/]")
         new_webhook = Prompt.ask("[bold]Paste Webhook URL (optional, press Enter to skip)[/)", default="")

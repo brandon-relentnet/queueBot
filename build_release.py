@@ -4,6 +4,13 @@ import subprocess
 import sys
 import zipfile
 from datetime import datetime
+import importlib.util
+
+# Load version without importing the whole src package
+spec = importlib.util.spec_from_file_location("_version", "src/_version.py")
+version_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(version_module)
+VERSION = version_module.__version__
 
 def clean_build_dirs():
     """Removes 'dist' and 'build' directories if they exist."""
@@ -22,7 +29,7 @@ def run_pyinstaller():
     print("Running PyInstaller...")
     try:
         # Using sys.executable ensures we use the same python environment
-        cmd = [sys.executable, "-m", "PyInstaller", "TFTAutoAccept.spec"]
+        cmd = [sys.executable, "-m", "PyInstaller", "queueBot.spec"]
         subprocess.check_call(cmd)
         print("PyInstaller finished successfully.")
     except subprocess.CalledProcessError as e:
@@ -36,11 +43,10 @@ def create_zip_release():
         os.makedirs(releases_dir)
         print(f"Created '{releases_dir}' directory.")
 
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M")
-    zip_name = f"TFTAutoAccept-{timestamp}.zip"
+    zip_name = f"queueBot-v{VERSION}.zip"
     zip_path = os.path.join(releases_dir, zip_name)
     
-    exe_name = "TFTAutoAccept.exe" if sys.platform == "win32" else "TFTAutoAccept"
+    exe_name = "queueBot.exe" if sys.platform == "win32" else "queueBot"
     source_file = os.path.join("dist", exe_name)
     
     if not os.path.exists(source_file):
@@ -57,7 +63,7 @@ def create_zip_release():
         sys.exit(1)
 
 def main():
-    print("🔨 Building TFT Auto Accept...")
+    print("🔨 Building queueBot...")
     clean_build_dirs()
     run_pyinstaller()
     create_zip_release()

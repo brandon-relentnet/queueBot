@@ -66,9 +66,9 @@ class TrayIcon:
         icon_path = resource_path("assets/gnome-thresh.ico")
         image = Image.open(icon_path)
         self.icon = Icon(
-            "TFTAutoAccept",
+            "queueBot",
             icon=image,
-            title="TFT Auto Accept",
+            title="queueBot",
             menu=self._create_menu()
         )
         self.icon.run()
