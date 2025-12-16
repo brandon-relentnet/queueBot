@@ -57,70 +57,31 @@ def load_or_create_config():
         except json.JSONDecodeError:
             console.print("[danger]Config file is corrupted. Recreating...[/]")
     
-    return prompt_for_config()
+    return open_settings_ui()
 
-def prompt_for_config():
+def open_settings_ui(current_config=None):
     """
-    Prompts the user for configuration settings and saves them.
+    Launches the GUI for configuration.
     """
-    # Ensure console is initialized if it hasn't been already (fallback)
-    if console is None:
-        init_console()
-        
-    try:
-        console.clear()
-        console.print(Panel.fit("[bold white]queueBot Setup[/]", style="magenta"))
-        
-        console.print("[info]We need your Discord Webhook URL to send notifications.[/]")
-        new_webhook = Prompt.ask("[bold]Paste Webhook URL (optional, press Enter to skip)[/)", default="")
-        
-        new_id = ""
-        if new_webhook:
-            console.print("\n[info]Optional: Your Discord User ID for pings (@mention).[/]")
-            new_id = Prompt.ask("[bold]Paste User ID (optional, press Enter to skip)[/]", default="")
-
-        # --- Desktop Notifications Toggle ---
-        console.print("\n[info]Enable native desktop notifications?[/]")
-        desktop_notifs_enabled = Prompt.ask("[bold](Y/n)[/]", choices=["y", "n"], default="y")
-        
-        config = {
-            "webhook_url": new_webhook.strip(),
-            "user_id": new_id.strip(),
-            "desktop_notifications": desktop_notifs_enabled.lower() == 'y',
+    import gui
+    
+    if current_config is None:
+        # Default config structure
+        current_config = {
+            "webhook_url": "",
+            "user_id": "",
+            "desktop_notifications": True,
             "allowed_queue_ids": []
         }
 
-        # --- Queue Selection ---
-        console.print("\n[info]Select which game modes to auto-accept.[/]")
-        console.print("[dim]Leave blank to accept all game modes.[/]")
-        
-        # Create a reverse map for easy lookup
-        reverse_queue_map = {str(i+1): k for i, k in enumerate(QUEUE_ID_MAP.keys())}
-        
-        for i, (queue_id, name) in enumerate(QUEUE_ID_MAP.items()):
-            console.print(f"  [bold cyan][{i+1}][/] {name}")
-        
-        choices_str = Prompt.ask("[bold]Enter numbers separated by commas (e.g., 1, 3, 5)[/]", default="")
-        
-        if choices_str:
-            try:
-                selected_indices = [choice.strip() for choice in choices_str.split(',')]
-                selected_queue_ids = [reverse_queue_map[index] for index in selected_indices if index in reverse_queue_map]
-                config["allowed_queue_ids"] = selected_queue_ids
-                console.print(f"\n[info]Will only accept queues for: [bold green]{', '.join([QUEUE_ID_MAP[qid] for qid in selected_queue_ids])}[/][/]")
-            except (ValueError, KeyError) as e:
-                console.print(f"\n[danger]Invalid selection. Defaulting to all queues.[/]")
-                config["allowed_queue_ids"] = [] # Default to all
-
-        with open(CONFIG_FILE, "w") as f:
-            json.dump(config, f, indent=4)
-        
-        console.print("\n[success]✅ Settings saved successfully![/]\n")
-        return config
-
-    except RuntimeError as e:
-        if "lost sys.stdin" in str(e):
-             console.print("[danger]Cannot prompt for configuration: no interactive terminal detected.[/]")
-             console.print(f"[info]Please ensure '{CONFIG_FILE}' is valid and populated, or run in an interactive terminal.[/]")
-             sys.exit(1)
-        raise e
+    # This callback updates the in-memory config if needed, though usually the caller reloads it
+    # or the app restarts. For now, we return the new config if we can, but since the GUI is blocking
+    # and writes to file, we can just reload from file after it closes.
+    
+    gui.open_settings(current_config)
+    
+    # Reload to confirm what was saved
+    if os.path.exists(CONFIG_FILE):
+         with open(CONFIG_FILE, "r") as f:
+            return json.load(f)
+    return current_config

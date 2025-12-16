@@ -109,9 +109,7 @@ def main():
         
     # --- Configuration ---
     if args.update:
-        cfg.prompt_for_config()
-        cfg.console.print("[success]Configuration updated. Please restart the main application.[/]")
-        input("Press Enter to close...")
+        cfg.open_settings_ui(cfg.load_or_create_config())
         sys.exit(0)
 
     # --- Load Settings ---

@@ -3,6 +3,8 @@ import os
 from pystray import Icon, Menu, MenuItem as item
 from PIL import Image
 
+import config
+
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
@@ -25,6 +27,7 @@ class TrayIcon:
         menu_items = [
             item('Status: Running', None, enabled=False),
             Menu.SEPARATOR,
+            item('Settings', self.open_settings),
             item('Pause/Resume', self.toggle_pause)
         ]
         
@@ -39,6 +42,20 @@ class TrayIcon:
         menu_items.append(item('Exit', self.exit_app))
         
         return Menu(*menu_items)
+
+    def open_settings(self, icon, menu_item):
+        """Opens the configuration GUI."""
+        # Note: This will block the tray icon's thread while the window is open.
+        # Since we are using pystray, this is the main thread unless run in detached mode.
+        # But LCU logic is in a background thread, so it keeps working!
+        # We just need to reload config after it closes.
+        new_config = config.open_settings_ui(self.lcu_connector.config)
+        
+        # Update LCU connector with new config
+        if new_config:
+            self.lcu_connector.config = new_config
+            # Optional: Notify user
+            icon.notify("Configuration updated successfully.")
 
     def on_toggle_console(self, icon, menu_item):
         """Toggles the console window visibility."""
