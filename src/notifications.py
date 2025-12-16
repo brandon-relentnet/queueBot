@@ -21,11 +21,11 @@ def send_desktop_notification(game_mode):
     Sends a native desktop notification.
     """
     try:
-        icon_path = resource_path("gnome-thresh.ico")
+        icon_path = resource_path("assets/gnome-thresh.ico")
         notification.notify(
             title="Queue Popped!",
             message=f"Accepting match for {game_mode}.",
-            app_name="TFT Auto Accept",
+            app_name="queueBot",
             app_icon=icon_path,
             timeout=10  # Notification will disappear after 10 seconds
         )
