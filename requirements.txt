@@ -1,0 +1,5 @@
+lcu-driver
+aiohttp
+rich
+plyer
+pystray
