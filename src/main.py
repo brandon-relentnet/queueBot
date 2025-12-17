@@ -83,6 +83,7 @@ def main():
     # --- ALWAYS Ensure Console Exists ---
     # We need a console for background threads to log to, even if hidden.
     ensure_console_created()
+    set_console_visibility(False)
 
     # --- Single Instance Check ---
     # Create a named mutex. If it already exists, another instance is running.
@@ -102,10 +103,6 @@ def main():
 
     # --- Check if setup is needed ---
     setup_needed = args.update or not os.path.exists(cfg.CONFIG_FILE)
-
-    if not setup_needed:
-        # If setup is done, hide the console immediately on startup
-        set_console_visibility(False)
         
     # --- Configuration ---
     if args.update:
@@ -114,10 +111,6 @@ def main():
 
     # --- Load Settings ---
     settings = cfg.load_or_create_config()
-    
-    # If we were showing the console for setup, hide it now
-    if setup_needed:
-        set_console_visibility(False)
 
     # --- LCU Connector in a background thread ---
     try:

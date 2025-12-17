@@ -49,7 +49,13 @@ class TrayIcon:
         # Since we are using pystray, this is the main thread unless run in detached mode.
         # But LCU logic is in a background thread, so it keeps working!
         # We just need to reload config after it closes.
-        new_config = config.open_settings_ui(self.lcu_connector.config)
+        def apply_config(new_config):
+            self.lcu_connector.config = new_config
+
+        new_config = config.open_settings_ui(
+            self.lcu_connector.config,
+            on_save_callback=apply_config
+        )
         
         # Update LCU connector with new config
         if new_config:

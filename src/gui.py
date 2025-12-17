@@ -16,8 +16,9 @@ class SettingsApp:
         self.root.geometry("450x600")
         self.root.resizable(False, False)
         
-        self.config = current_config
+        self.config = self._normalize_config(current_config)
         self.on_save_callback = on_save_callback
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
         
         # Style
         self.style = ttk.Style()
@@ -95,24 +96,56 @@ class SettingsApp:
         footer_frame = ttk.Frame(main_frame)
         footer_frame.pack(fill=tk.X, pady=10)
         
-        ttk.Button(footer_frame, text="Save Settings", command=self.save_settings).pack(side=tk.RIGHT)
         ttk.Button(footer_frame, text="Cancel", command=self.root.destroy).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(footer_frame, text="Apply", command=self.apply_settings).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(footer_frame, text="Save & Close", command=self.save_settings).pack(side=tk.RIGHT)
 
-    def save_settings(self):
-        # Gather data
-        new_config = {
+    def _normalize_config(self, config_data):
+        if config_data is None:
+            config_data = {}
+
+        allowed_ids = config_data.get("allowed_queue_ids", [])
+        return {
+            "webhook_url": (config_data.get("webhook_url") or "").strip(),
+            "user_id": (config_data.get("user_id") or "").strip(),
+            "desktop_notifications": bool(config_data.get("desktop_notifications", True)),
+            "allowed_queue_ids": sorted(allowed_ids),
+        }
+
+    def _build_config_from_ui(self):
+        selected_ids = [
+            q_id for q_id, var in self.queue_vars.items() if var.get()
+        ]
+
+        return self._normalize_config({
             "webhook_url": self.webhook_var.get().strip(),
             "user_id": self.userid_var.get().strip(),
             "desktop_notifications": self.desktop_notif_var.get(),
-            "allowed_queue_ids": []
-        }
-        
-        selected_ids = []
-        for q_id, var in self.queue_vars.items():
-            if var.get():
-                selected_ids.append(q_id)
-        
-        new_config["allowed_queue_ids"] = selected_ids
+            "allowed_queue_ids": selected_ids,
+        })
+
+    def _is_dirty(self):
+        return self._build_config_from_ui() != self.config
+
+    def apply_settings(self):
+        self.save_settings(close_after=False)
+
+    def on_close(self):
+        if not self._is_dirty():
+            self.root.destroy()
+            return
+
+        choice = messagebox.askyesnocancel(
+            "Save changes?",
+            "Save changes before closing?"
+        )
+        if choice is True:
+            self.save_settings(close_after=True)
+        elif choice is False:
+            self.root.destroy()
+
+    def save_settings(self, close_after=True):
+        new_config = self._build_config_from_ui()
         
         # Save to file
         try:
@@ -122,9 +155,12 @@ class SettingsApp:
             # Notify app
             if self.on_save_callback:
                 self.on_save_callback(new_config)
-            
+
+            self.config = new_config
             messagebox.showinfo("Success", "Settings saved successfully!")
-            self.root.destroy()
+
+            if close_after:
+                self.root.destroy()
             
         except Exception as e:
             messagebox.showerror("Error", f"Failed to save settings: {e}")

@@ -59,7 +59,7 @@ def load_or_create_config():
     
     return open_settings_ui()
 
-def open_settings_ui(current_config=None):
+def open_settings_ui(current_config=None, on_save_callback=None):
     """
     Launches the GUI for configuration.
     """
@@ -78,7 +78,7 @@ def open_settings_ui(current_config=None):
     # or the app restarts. For now, we return the new config if we can, but since the GUI is blocking
     # and writes to file, we can just reload from file after it closes.
     
-    gui.open_settings(current_config)
+    gui.open_settings(current_config, on_save_callback=on_save_callback)
     
     # Reload to confirm what was saved
     if os.path.exists(CONFIG_FILE):
